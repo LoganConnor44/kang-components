@@ -1,6 +1,6 @@
 {
 	"name": "kang-components",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Generic, domain-free React UI primitives (CSS-first press feedback, delayed-action hook).",
 	"type": "module",
 	"license": "MIT",

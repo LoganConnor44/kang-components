@@ -9,3 +9,9 @@ export {
 } from './press.js';
 
 export { useAnimatedAction } from './use-animated-action.js';
+
+export {
+	actionSheetContainer,
+	actionSheetList,
+	actionSheetRow,
+} from './action-sheet.js';

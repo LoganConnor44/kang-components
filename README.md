@@ -74,6 +74,27 @@ const act = useAnimatedAction();
 const onClick = () => act(() => navigate('/next'));
 ```
 
+## Action-sheet primitives
+
+CSS-first layout for a bottom-sheet "actions" panel — a vertical container, a
+list, and tappable action rows with subtle press feedback. Colors stay with the
+consumer: `actionSheetRow` takes the pressed-state background, so Kang carries no
+theme knowledge.
+
+```ts
+import styled from 'styled-components';
+import { actionSheetContainer, actionSheetList, actionSheetRow } from 'kang-components';
+
+const Container = styled.div`${actionSheetContainer()}`;
+const List = styled.div`${actionSheetList()}`;
+const Row = styled.button`
+	${({ theme }) => actionSheetRow(theme.colors.surfaceVariant)}
+`;
+```
+
+Per-row content (leading icon, label, destructive tint, ripple) is the
+consumer's to layer on top of the row.
+
 ## Build
 
 ```bash
