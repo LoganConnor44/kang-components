@@ -20,7 +20,10 @@
  */
 
 import { useCallback, useState, type MouseEvent } from 'react';
-import styled, { keyframes } from 'styled-components';
+// Named imports (not the default) so this resolves consistently across bundler
+// and raw ESM/CJS environments — styled-components v6's default export is the
+// CJS namespace under Node's interop, where `styled.span` is undefined.
+import { styled, keyframes } from 'styled-components';
 
 export interface RippleState<T> {
 	x: number;
