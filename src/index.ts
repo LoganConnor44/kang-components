@@ -18,3 +18,20 @@ export {
 
 export { Ripple, rippleAnimation, useRipple } from './ripple.js';
 export type { RippleState } from './ripple.js';
+
+export {
+	SPRING_COMFORTABLE,
+	SPRING_COMFORTABLE_SLOW,
+	SPRING_SNAPPY,
+	SPRING_RESPONSIVE,
+	SPRING_STAGGERED,
+	SPRING_INSTANT,
+	SPRING_GENTLE,
+	SPRING_VERY_SLOW,
+	SPRING_LANDING,
+	SPRING_RISING,
+} from './spring.js';
+export type { SpringConfigConstant } from './spring.js';
+
+export { default as AnimatedText } from './animated-text.js';
+export type { AnimatedTextProps } from './animated-text.js';
