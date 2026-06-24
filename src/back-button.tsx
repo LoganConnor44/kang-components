@@ -16,13 +16,17 @@
  *   one.
  * - `disabled` support: blocks the click and dims the control.
  *
- * `styled-components`, `react` and `react-icons` are the only things this module
- * pulls in; consumers importing the press/string primitives never touch them.
+ * Icon: ymy hard-depended on `react-icons` (IoChevronBackOutline). To keep kang
+ * dependency-light and domain-free, the same chevron-back glyph ships as an
+ * inline SVG (identical Ionicons path data), and consumers may override it with
+ * any node via `icon` — the same pattern as BannerButton.
+ *
+ * `styled-components` and `react` are the only things this module pulls in;
+ * consumers importing the press/string primitives never touch them.
  */
 
-import { useCallback, type MouseEvent, type ReactElement } from 'react';
+import { useCallback, type MouseEvent, type ReactElement, type ReactNode } from 'react';
 import { styled } from 'styled-components';
-import { IoChevronBackOutline } from 'react-icons/io5';
 import { pressPrimary } from './press.js';
 import { Ripple, useRipple } from './ripple.js';
 
@@ -40,7 +44,39 @@ export type BackButtonProps = {
 	ariaLabel?: string;
 	/** Optional class name passthrough for layout/positioning by the consumer. */
 	className?: string;
+	/**
+	 * An explicit icon node, overriding the default inline chevron. Lets
+	 * consumers supply their own glyph (e.g. a react-icons element) without kang
+	 * depending on an icon library.
+	 */
+	icon?: ReactNode;
 };
+
+/**
+ * Inline IoChevronBackOutline (react-icons/io5) — identical Ionicons path data
+ * (viewBox + stroke-width 48 outline chevron) so the glyph is unchanged.
+ */
+const ChevronBackIcon = ({ size }: { size: string }): ReactElement => (
+	<svg
+		stroke="currentColor"
+		fill="currentColor"
+		strokeWidth="0"
+		viewBox="0 0 512 512"
+		height={size}
+		width={size}
+		xmlns="http://www.w3.org/2000/svg"
+		aria-hidden="true"
+		focusable="false"
+	>
+		<path
+			fill="none"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+			strokeWidth="48"
+			d="M328 112 184 256l144 144"
+		/>
+	</svg>
+);
 
 const StyledBackButton = styled.button<{ $disabled: boolean }>`
 	position: relative;
@@ -72,6 +108,7 @@ const BackButton = ({
 	disabled = false,
 	ariaLabel = 'Back',
 	className,
+	icon,
 }: BackButtonProps): ReactElement => {
 	const { ripple, trigger, isTarget } = useRipple<'back'>();
 
@@ -93,7 +130,7 @@ const BackButton = ({
 			aria-label={ariaLabel}
 			onClick={handleClick}
 		>
-			<IoChevronBackOutline size={size != null ? size : '1.5rem'} aria-hidden="true" />
+			{icon !== undefined ? icon : <ChevronBackIcon size={size != null ? size : '1.5rem'} />}
 			{isTarget('back') && ripple && <Ripple key={ripple.key} $x={ripple.x} $y={ripple.y} />}
 		</StyledBackButton>
 	);

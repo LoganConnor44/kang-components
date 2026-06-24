@@ -15,13 +15,18 @@ describe('BackButton', () => {
 		expect(btn).toHaveAttribute('type', 'button');
 	});
 
-	it('renders an icon (svg) inside the button', () => {
+	it('renders the inline chevron-back icon (svg) inside the button', () => {
 		const { container } = render(<BackButton />);
 		const svg = container.querySelector('svg');
 		expect(svg).toBeInTheDocument();
 		// Default size is 1.5rem.
 		expect(svg).toHaveAttribute('height', '1.5rem');
 		expect(svg).toHaveAttribute('width', '1.5rem');
+		// The default glyph is the inline Ionicons chevron-back outline path —
+		// no react-icons dependency. Pin the path data so the glyph can't silently
+		// change.
+		const path = svg?.querySelector('path');
+		expect(path).toHaveAttribute('d', 'M328 112 184 256l144 144');
 	});
 
 	it('honors a custom size prop', () => {
@@ -29,6 +34,24 @@ describe('BackButton', () => {
 		const svg = container.querySelector('svg');
 		expect(svg).toHaveAttribute('height', '3rem');
 		expect(svg).toHaveAttribute('width', '3rem');
+	});
+
+	describe('icon override', () => {
+		it('renders a custom icon node in place of the default chevron', () => {
+			const { container } = render(
+				<BackButton icon={<svg data-testid="custom-glyph" />} />
+			);
+			expect(screen.getByTestId('custom-glyph')).toBeInTheDocument();
+			// The default inline chevron path must NOT be present when overridden.
+			expect(
+				container.querySelector('path[d="M328 112 184 256l144 144"]')
+			).not.toBeInTheDocument();
+		});
+
+		it('lets the custom icon be any node (not just an svg)', () => {
+			render(<BackButton icon={<span data-testid="text-glyph">‹</span>} />);
+			expect(screen.getByTestId('text-glyph')).toBeInTheDocument();
+		});
 	});
 
 	it('honors a custom ariaLabel', () => {
