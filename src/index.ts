@@ -35,3 +35,14 @@ export type { SpringConfigConstant } from './spring.js';
 
 export { default as AnimatedText } from './animated-text.js';
 export type { AnimatedTextProps } from './animated-text.js';
+
+export { buildTheme, theme, hexToRgb } from './theme.js';
+export type { ThemeType } from './theme.js';
+export { lightPalette, darkPalette } from './palettes.js';
+export type { ModeColorPalette } from './palettes.js';
+
+export type {
+	DynamicLanguage,
+	CharacterPreference,
+	StaticLanguage,
+} from './language.js';
