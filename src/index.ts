@@ -36,6 +36,9 @@ export type { SpringConfigConstant } from './spring.js';
 export { default as AnimatedText } from './animated-text.js';
 export type { AnimatedTextProps } from './animated-text.js';
 
+export { default as BackButton } from './back-button.js';
+export type { BackButtonProps } from './back-button.js';
+
 export { buildTheme, theme, hexToRgb } from './theme.js';
 export type { ThemeType } from './theme.js';
 export { lightPalette, darkPalette } from './palettes.js';
