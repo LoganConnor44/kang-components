@@ -36,6 +36,9 @@ export type { SpringConfigConstant } from './spring.js';
 export { default as AnimatedText } from './animated-text.js';
 export type { AnimatedTextProps } from './animated-text.js';
 
+export { default as CircleIconButton } from './circle-icon-button.js';
+export type { CircleIconButtonProps, CircleIconName } from './circle-icon-button.js';
+
 export { buildTheme, theme, hexToRgb } from './theme.js';
 export type { ThemeType } from './theme.js';
 export { lightPalette, darkPalette } from './palettes.js';
