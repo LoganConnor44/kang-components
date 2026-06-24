@@ -38,6 +38,8 @@ export type { AnimatedTextProps } from './animated-text.js';
 
 export { default as BackButton } from './back-button.js';
 export type { BackButtonProps } from './back-button.js';
+export { default as CircleIconButton } from './circle-icon-button.js';
+export type { CircleIconButtonProps, CircleIconName } from './circle-icon-button.js';
 
 export { buildTheme, theme, hexToRgb } from './theme.js';
 export type { ThemeType } from './theme.js';
