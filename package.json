@@ -29,11 +29,15 @@
 	},
 	"peerDependencies": {
 		"@react-spring/web": ">=9",
+		"@use-gesture/react": ">=10",
 		"react": ">=18",
 		"styled-components": ">=6"
 	},
 	"peerDependenciesMeta": {
 		"@react-spring/web": {
+			"optional": true
+		},
+		"@use-gesture/react": {
 			"optional": true
 		},
 		"react": {
@@ -49,6 +53,7 @@
 		"@testing-library/react": "^16.1.0",
 		"@types/react": "^18.3.18",
 		"@types/react-dom": "^18.3.5",
+		"@use-gesture/react": "^10.3.1",
 		"@vitejs/plugin-react": "^4.3.4",
 		"jsdom": "^25.0.1",
 		"react": "^18.3.1",
