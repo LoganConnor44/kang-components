@@ -1,0 +1,52 @@
+name: CI (build + unit tests)
+
+# Gates EVERY PR (and pushes to main) on the build + unit/integration suite.
+# Until this existed, kang had NO CI at all — `tsc` and `vitest` only ran
+# locally/by hand, so nothing enforced green before merge or publish. Resolves
+# issue #23 (from the v0.9.0 testing audit). Runs on a free GitHub-hosted Linux
+# runner; mirrors xunzi's proven .github/workflows/ci.yaml, scoped to kang
+# (kang has no lint script, so this is just build + test — no lint step).
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Cancel superseded runs on the same ref to save CI minutes.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: build + unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Use `npm install` (NOT `npm ci`) and drop the committed lockfile first.
+      # The package-lock.json is generated on macOS; even though kang's lockfile
+      # currently lists every platform's optional rollup binary, npm's
+      # platform-specific optional-dependency handling (npm/cli#4828) can still
+      # leave the Linux rollup native binary unresolved under `npm ci`, crashing
+      # vitest/vite with "Cannot find module @rollup/rollup-linux-x64-gnu".
+      # Dropping the lockfile lets npm resolve the correct platform-native deps
+      # for this runner. node_modules is fresh each run; the repo lockfile is
+      # untouched (this only edits the ephemeral checkout).
+      - name: Install dependencies
+        run: |
+          rm -f package-lock.json
+          npm install --no-audit --no-fund
+
+      # The real type gate — vitest strips types at runtime, so a green test run
+      # does NOT imply the types are sound. Matches the published `build` script.
+      - name: Build (type-check + emit)
+        run: npm run build
+
+      - name: Unit + integration tests
+        run: npm test
