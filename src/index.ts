@@ -57,3 +57,10 @@ export type {
 	CharacterPreference,
 	StaticLanguage,
 } from './language.js';
+
+export { ListItem, UnorderedListItemContainer } from './list-item.js';
+export type {
+	ListItemProps,
+	ListItemIconName,
+	ListItemActionName,
+} from './list-item.js';
