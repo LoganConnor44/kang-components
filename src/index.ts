@@ -42,6 +42,8 @@ export { default as CircleIconButton } from './circle-icon-button.js';
 export type { CircleIconButtonProps, CircleIconName } from './circle-icon-button.js';
 export { default as BannerButton } from './banner-button.js';
 export type { BannerButtonProps } from './banner-button.js';
+export { Badge } from './badge.js';
+export type { BadgeProps, BadgeVariant } from './badge.js';
 
 export { buildTheme, theme, hexToRgb } from './theme.js';
 export type { ThemeType } from './theme.js';
