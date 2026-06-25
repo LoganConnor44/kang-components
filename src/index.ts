@@ -48,6 +48,8 @@ export { default as ToggleSwitch } from './toggle-switch.js';
 export type { ToggleSwitchProps } from './toggle-switch.js';
 export { ConfirmDialog } from './confirm-dialog.js';
 export type { ConfirmDialogProps } from './confirm-dialog.js';
+export { BottomSheet } from './bottom-sheet.js';
+export type { BottomSheetProps } from './bottom-sheet.js';
 
 export { buildTheme, theme, hexToRgb } from './theme.js';
 export type { ThemeType } from './theme.js';
