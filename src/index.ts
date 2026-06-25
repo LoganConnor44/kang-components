@@ -10,6 +10,9 @@ export {
 
 export { useAnimatedAction } from './use-animated-action.js';
 
+export { useViewportSize } from './use-viewport-size.js';
+export type { ViewportSize } from './use-viewport-size.js';
+
 export {
 	actionSheetContainer,
 	actionSheetList,
