@@ -57,6 +57,9 @@ export type { BottomSheetProps } from './bottom-sheet.js';
 export { SearchField } from './search-field.js';
 export type { SearchFieldProps } from './search-field.js';
 
+export { SearchBar } from './search-bar.js';
+export type { SearchBarProps } from './search-bar.js';
+
 export { buildTheme, theme, hexToRgb } from './theme.js';
 export type { ThemeType } from './theme.js';
 export { lightPalette, darkPalette } from './palettes.js';
