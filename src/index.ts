@@ -54,6 +54,9 @@ export type { ConfirmDialogProps } from './confirm-dialog.js';
 export { BottomSheet } from './bottom-sheet.js';
 export type { BottomSheetProps } from './bottom-sheet.js';
 
+export { SearchField } from './search-field.js';
+export type { SearchFieldProps } from './search-field.js';
+
 export { buildTheme, theme, hexToRgb } from './theme.js';
 export type { ThemeType } from './theme.js';
 export { lightPalette, darkPalette } from './palettes.js';
