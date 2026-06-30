@@ -53,4 +53,13 @@ describe('Confetti', () => {
 		const after = Array.from(pieces()).map((p) => p.textContent);
 		expect(after).toEqual(before);
 	});
+
+	it('re-rolls when a brand-new burst starts (active off → on)', () => {
+		const { rerender } = render(
+			<Confetti active={false} count={20} tokens={['A']} />,
+		);
+		rerender(<Confetti active count={20} tokens={['Z']} />);
+		const texts = Array.from(pieces()).map((p) => p.textContent);
+		expect(texts.some((t) => t === 'Z')).toBe(true);
+	});
 });
