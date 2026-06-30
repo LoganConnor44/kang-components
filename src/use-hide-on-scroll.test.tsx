@@ -102,6 +102,36 @@ describe('useHideOnScroll', () => {
 		document.body.removeChild(el);
 	});
 
+	it('reads position from event detail for transform/virtualized scrollers', () => {
+		// A custom scroller (overflow:hidden + CSS transform) can't expose
+		// scrollTop, so it dispatches a `scroll` CustomEvent carrying its logical
+		// position. The hook must honour detail.scrollTop over the (zero) scrollTop.
+		const el = document.createElement('div');
+		document.body.appendChild(el);
+		// Even though the element's real scrollTop stays 0, detail drives direction.
+		(el as unknown as { scrollTop: number }).scrollTop = 0;
+
+		const { result } = renderHook(() => useHideOnScroll({ threshold: 8 }));
+
+		act(() => {
+			el.dispatchEvent(new CustomEvent('scroll', { detail: { scrollTop: 0 }, bubbles: false }));
+		});
+		// First event from this source re-baselines (reveals).
+		expect(result.current).toBe(false);
+
+		act(() => {
+			el.dispatchEvent(new CustomEvent('scroll', { detail: { scrollTop: 300 }, bubbles: false }));
+		});
+		expect(result.current).toBe(true); // scrolled down per detail → hidden
+
+		act(() => {
+			el.dispatchEvent(new CustomEvent('scroll', { detail: { scrollTop: 250 }, bubbles: false }));
+		});
+		expect(result.current).toBe(false); // scrolled up per detail → revealed
+
+		document.body.removeChild(el);
+	});
+
 	it('stays visible and attaches no listener when disabled', () => {
 		const addSpy = vi.spyOn(window, 'addEventListener');
 		const { result } = renderHook(() => useHideOnScroll({ enabled: false }));

@@ -25,6 +25,14 @@ export interface UseHideOnScrollOptions {
 	target?: Window | HTMLElement | null;
 }
 
+/**
+ * A `scroll` event whose vertical position can't be read from `target.scrollTop`
+ * — e.g. a transform/virtualized scroller (content moved via CSS transform inside
+ * an `overflow: hidden` box). Such scrollers dispatch a `scroll` CustomEvent
+ * carrying their logical position so this hook can react to them like any other.
+ */
+type ScrollDetail = { scrollTop?: number };
+
 const isDocumentLevel = (t: EventTarget | null): boolean =>
 	// window / document / null aren't Elements; documentElement & body are
 	// Elements but represent page scroll, so fold them in too. Page scroll fires
@@ -40,11 +48,19 @@ const isDocumentLevel = (t: EventTarget | null): boolean =>
 const normalizeSource = (t: EventTarget | null): EventTarget =>
 	isDocumentLevel(t) ? document : t!;
 
-const readScrollTop = (eventTarget: EventTarget | null): number => {
-	if (!isDocumentLevel(eventTarget) && typeof (eventTarget as HTMLElement).scrollTop === 'number') {
-		return (eventTarget as HTMLElement).scrollTop;
+const scrollTopOf = (target: EventTarget | null): number => {
+	if (!isDocumentLevel(target) && typeof (target as HTMLElement).scrollTop === 'number') {
+		return (target as HTMLElement).scrollTop;
 	}
 	return window.scrollY ?? window.pageYOffset ?? 0;
+};
+
+const readScrollTop = (event: Event): number => {
+	// Transform/virtualized scrollers can't expose scrollTop, so they carry an
+	// explicit logical position on the event detail — prefer it when present.
+	const detailTop = (event as CustomEvent<ScrollDetail>).detail?.scrollTop;
+	if (typeof detailTop === 'number') return detailTop;
+	return scrollTopOf(event.target);
 };
 
 /**
@@ -76,11 +92,11 @@ export function useHideOnScroll(options: UseHideOnScrollOptions = {}): boolean {
 		// Seed the baseline at the current document scroll so the first gesture is
 		// measured rather than swallowed re-baselining a null source.
 		lastSourceRef.current = normalizeSource(target ?? null);
-		lastYRef.current = readScrollTop(target ?? null);
+		lastYRef.current = scrollTopOf(target ?? null);
 
 		const handleScroll = (event: Event) => {
 			const source = normalizeSource(event.target);
-			const y = readScrollTop(event.target);
+			const y = readScrollTop(event);
 
 			// New scroll source (e.g. a freshly-mounted view's list): re-baseline
 			// and reveal rather than carrying the previous view's hidden state over.
