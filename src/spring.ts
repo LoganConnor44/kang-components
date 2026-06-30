@@ -49,3 +49,16 @@ export const SPRING_LANDING: SpringConfigConstant = { tension: 280, friction: 22
 
 /** Rising config — for reverse hero animations, smoother deceleration. */
 export const SPRING_RISING: SpringConfigConstant = { tension: 220, friction: 26, mass: 1 };
+
+/**
+ * Tracking config — for elements that follow a pointer drag/scroll and settle
+ * (sheet drags, scroll-restore, card carousels). Looser than RESPONSIVE so the
+ * follow feels physical rather than snappy.
+ */
+export const SPRING_TRACKING: SpringConfigConstant = { tension: 170, friction: 26 };
+
+/** Brisk config — quick UI feedback a touch livelier than RESPONSIVE (keyboards, nav). */
+export const SPRING_BRISK: SpringConfigConstant = { tension: 300, friction: 26 };
+
+/** Float config — slow ambient drift for decorative/background motion (watermarks). */
+export const SPRING_FLOAT: SpringConfigConstant = { tension: 60, friction: 20 };
