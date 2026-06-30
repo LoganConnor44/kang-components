@@ -68,6 +68,9 @@ export type { ThemeType } from './theme.js';
 export { lightPalette, darkPalette } from './palettes.js';
 export type { ModeColorPalette } from './palettes.js';
 
+export { tilePalette, tileColorIndex, tileColorForKey } from './tile-palette.js';
+export type { TileColor } from './tile-palette.js';
+
 export type {
 	DynamicLanguage,
 	CharacterPreference,
