@@ -1,4 +1,6 @@
-import styled, { keyframes } from 'styled-components';
+// Named import (not the default) so styled-components resolves consistently
+// when this file is consumed as a published node_modules ESM module.
+import { styled, keyframes } from 'styled-components';
 
 /**
  * Falls from just above the top, drifting sideways and rotating, then fades.
