@@ -1,6 +1,6 @@
 {
 	"name": "kang-components",
-	"version": "0.9.3",
+	"version": "0.9.5",
 	"description": "Generic, domain-free React UI primitives (CSS-first press feedback, delayed-action hook, spring presets, cross-fading text, circle icon button).",
 	"type": "module",
 	"license": "MIT",

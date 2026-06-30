@@ -13,6 +13,9 @@ export { useAnimatedAction } from './use-animated-action.js';
 export { useViewportSize } from './use-viewport-size.js';
 export type { ViewportSize } from './use-viewport-size.js';
 
+export { useHideOnScroll } from './use-hide-on-scroll.js';
+export type { UseHideOnScrollOptions } from './use-hide-on-scroll.js';
+
 export {
 	actionSheetContainer,
 	actionSheetList,
