@@ -21,6 +21,9 @@ const CONFIG_NAMES = [
 	'SPRING_VERY_SLOW',
 	'SPRING_LANDING',
 	'SPRING_RISING',
+	'SPRING_TRACKING',
+	'SPRING_BRISK',
+	'SPRING_FLOAT',
 ] as const;
 
 describe('spring configs', () => {
@@ -46,5 +49,8 @@ describe('spring configs', () => {
 		expect(spring.SPRING_COMFORTABLE).toEqual({ tension: 200, friction: 25 });
 		expect(spring.SPRING_SNAPPY).toEqual({ tension: 325, friction: 30 });
 		expect(spring.SPRING_LANDING).toEqual({ tension: 280, friction: 22, mass: 1 });
+		expect(spring.SPRING_TRACKING).toEqual({ tension: 170, friction: 26 });
+		expect(spring.SPRING_BRISK).toEqual({ tension: 300, friction: 26 });
+		expect(spring.SPRING_FLOAT).toEqual({ tension: 60, friction: 20 });
 	});
 });

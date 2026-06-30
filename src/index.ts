@@ -36,6 +36,9 @@ export {
 	SPRING_VERY_SLOW,
 	SPRING_LANDING,
 	SPRING_RISING,
+	SPRING_TRACKING,
+	SPRING_BRISK,
+	SPRING_FLOAT,
 } from './spring.js';
 export type { SpringConfigConstant } from './spring.js';
 
