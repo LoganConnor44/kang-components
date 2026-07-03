@@ -31,6 +31,7 @@ import { type ReactNode } from 'react';
 import { styled } from 'styled-components';
 import AnimatedText from './animated-text.js';
 import { pressPrimary } from './press.js';
+import { focusVisibleRing } from './focus-ring.js';
 import type { CharacterPreference, DynamicLanguage } from './language.js';
 
 export type BannerButtonProps = {
@@ -76,11 +77,16 @@ const StyledButton = styled.button`
 	align-items: center;
 	position: relative;
 	z-index: 10;
+	/* min 44px tall for a comfortable touch target (was ~36px) */
+	min-height: 44px;
+	box-sizing: border-box;
 	padding: 0.5rem 1rem;
 	border: none;
 	outline: none;
 	cursor: pointer;
 	transition: background-color 0.3s;
+
+	${focusVisibleRing('-3px')}
 
 	&.primary {
 		background-color: ${({ theme }) =>

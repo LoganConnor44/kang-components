@@ -75,6 +75,18 @@ const SwitchContainer = styled.label<{ $checked: boolean }>`
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
 
+	/* Extend the tap target to the 44px minimum without changing the visible
+	   34x20 switch or the row layout — the pseudo is invisible and absolute. */
+	&::before {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 44px;
+		height: 44px;
+		transform: translate(-50%, -50%);
+	}
+
 	@media (hover: hover) {
 		&:hover ${RippleEffect} {
 			background-color: ${({ $checked, theme }) =>
@@ -101,6 +113,13 @@ const SwitchTrack = styled.span<{ $checked: boolean }>`
 			: c(theme).toggleTrackOff ?? 'rgba(0, 0, 0, 0.38)'};
 	border-radius: 7px;
 	transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+
+	/* Keyboard focus ring — the input is visually hidden, so surface the ring on
+	   the track. :focus-visible so it only shows for keyboard/AT, not mouse. */
+	${SwitchInput}:focus-visible ~ & {
+		outline: 2px solid ${({ theme }) => c(theme).toggleThumbOn ?? '#489fb5'};
+		outline-offset: 3px;
+	}
 `;
 
 const SwitchThumb = styled.span<{ $checked: boolean }>`
@@ -133,6 +152,12 @@ export type ToggleSwitchProps = {
 	onChange?: (checked: boolean) => void;
 	/** When `true`, the switch is non-interactive and suppresses `onChange`. */
 	disabled?: boolean;
+	/**
+	 * Accessible name for the switch. The control is a bare checkbox with no
+	 * visible text of its own, so without this it is announced as an unnamed
+	 * checkbox — pass what the toggle controls, e.g. "Error reporting".
+	 */
+	ariaLabel?: string;
 };
 
 export const ToggleSwitch = ({
@@ -140,17 +165,20 @@ export const ToggleSwitch = ({
 	defaultChecked = false,
 	onChange,
 	disabled = false,
+	ariaLabel,
 }: ToggleSwitchProps): ReactElement => {
 	const [internalChecked, setInternalChecked] = useState(defaultChecked);
 
 	const isControlled = controlledChecked !== undefined;
 	const checked = isControlled ? controlledChecked : internalChecked;
 
-	const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+	const handleChange = (_e: ChangeEvent<HTMLInputElement>) => {
 		if (disabled) return;
 
-		// Blur immediately to remove the focus highlight.
-		e.target.blur();
+		// NOTE: do NOT blur here. The old ymy code blurred the input on change to
+		// hide the focus ring, which also deleted the keyboard-focus indicator for
+		// AT/keyboard users. Focus visibility is now handled via :focus-visible
+		// (only shows for keyboard), so mouse users don't see a lingering ring.
 
 		const newValue = !checked;
 		if (!isControlled) {
@@ -163,6 +191,7 @@ export const ToggleSwitch = ({
 		<SwitchContainer $checked={checked} onClick={(e) => e.stopPropagation()}>
 			<SwitchInput
 				type="checkbox"
+				aria-label={ariaLabel}
 				checked={checked}
 				onChange={handleChange}
 				disabled={disabled}

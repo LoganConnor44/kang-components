@@ -96,3 +96,20 @@ describe('ToggleSwitch', () => {
 		expect(getComputedStyle(getThumb()).left).toBe('14px');
 	});
 });
+
+describe('ToggleSwitch accessibility (#719)', () => {
+	it('exposes an accessible name via ariaLabel', () => {
+		render(<ToggleSwitch ariaLabel="Error reporting" />);
+		expect(screen.getByRole('checkbox', { name: 'Error reporting' })).toBeInTheDocument();
+	});
+
+	it('keeps keyboard focus after toggling (no self-blur)', () => {
+		render(<ToggleSwitch ariaLabel="Test" />);
+		const cb = getCheckbox();
+		cb.focus();
+		expect(cb).toHaveFocus();
+		fireEvent.click(cb);
+		// The old ymy code called e.target.blur() here, deleting keyboard focus.
+		expect(cb).toHaveFocus();
+	});
+});
