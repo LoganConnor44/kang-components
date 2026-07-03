@@ -22,6 +22,7 @@ export {
 	actionSheetRow,
 } from './action-sheet.js';
 
+export { focusVisibleRing } from './focus-ring.js';
 export { Ripple, rippleAnimation, useRipple } from './ripple.js';
 export type { RippleState } from './ripple.js';
 

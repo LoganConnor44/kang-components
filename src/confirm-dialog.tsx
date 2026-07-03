@@ -22,6 +22,7 @@
 import { type ReactElement, type ReactNode, type MouseEvent } from 'react';
 import { styled } from 'styled-components';
 import { Ripple, useRipple } from './ripple.js';
+import { focusVisibleRing } from './focus-ring.js';
 
 export interface ConfirmDialogProps {
 	/** Primary message displayed at the top. */
@@ -98,6 +99,8 @@ const DialogButton = styled.button<{ $destructive?: boolean }>`
 	outline: none;
 	overflow: hidden;
 	-webkit-tap-highlight-color: transparent;
+
+	${focusVisibleRing('-2px')}
 `;
 
 export function ConfirmDialog({

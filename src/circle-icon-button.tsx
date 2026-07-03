@@ -32,6 +32,7 @@ import { animated, useSpring } from '@react-spring/web';
 // across bundler and raw ESM/CJS environments — matches ripple.ts.
 import { styled } from 'styled-components';
 import { pressPrimaryScale } from './press.js';
+import { focusVisibleRing } from './focus-ring.js';
 
 /** The built-in icon set this button can render. */
 export type CircleIconName = 'person' | 'qr';
@@ -57,11 +58,19 @@ export type CircleIconButtonProps = {
 	 * button still renders and is interactive but performs no action.
 	 */
 	onClick?: () => void;
+
+	/**
+	 * Accessible name for the button. The icon is decorative (`aria-hidden`), so
+	 * without this the button is announced as just "button". Required in practice
+	 * for a usable control — e.g. "Profile" / "Scan invite code".
+	 */
+	ariaLabel?: string;
 };
 
 type ThemeColors = { colors?: { onPrimary?: string; onSurface?: string } };
 
 const StyledCircleButton = styled(animated.button)`
+	position: relative;
 	width: 2.5rem;
 	height: 2.5rem;
 	padding: 0;
@@ -74,6 +83,16 @@ const StyledCircleButton = styled(animated.button)`
 	justify-content: center;
 	cursor: pointer;
 	${pressPrimaryScale()}
+	${focusVisibleRing()}
+
+	/* Extend the tap target to the 44px minimum without growing the visible 40px
+	   circle — the pseudo-element is invisible and adds no layout. */
+	&::after {
+		content: '';
+		position: absolute;
+		inset: -2px;
+		border-radius: 50%;
+	}
 `;
 
 const StyledIcon = styled.span`
@@ -134,6 +153,7 @@ export default function CircleIconButton({
 	iconComponent,
 	icon,
 	onClick,
+	ariaLabel,
 }: CircleIconButtonProps): ReactElement {
 	const animatedStyles = useSpring({
 		from: { opacity: 0, scale: 0.5 },
@@ -149,6 +169,7 @@ export default function CircleIconButton({
 	return (
 		<StyledCircleButton
 			type="button"
+			aria-label={ariaLabel}
 			style={animatedStyles}
 			onClick={handleClick}
 		>

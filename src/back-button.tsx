@@ -29,6 +29,7 @@ import { useCallback, type MouseEvent, type ReactElement, type ReactNode } from 
 import { styled } from 'styled-components';
 import { pressPrimary } from './press.js';
 import { Ripple, useRipple } from './ripple.js';
+import { focusVisibleRing } from './focus-ring.js';
 
 export type BackButtonProps = {
 	/** Icon size (any CSS size value). Defaults to `'1.5rem'` — matching ymy. */
@@ -84,6 +85,9 @@ const StyledBackButton = styled.button<{ $disabled: boolean }>`
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
+	/* 44px min touch target; the icon keeps its size and just centers in it. */
+	min-width: 2.75rem;
+	min-height: 2.75rem;
 	padding: 0;
 	margin: 0;
 	border: none;
@@ -96,6 +100,7 @@ const StyledBackButton = styled.button<{ $disabled: boolean }>`
 	-webkit-tap-highlight-color: transparent;
 
 	${pressPrimary()}
+	${focusVisibleRing()}
 
 	&:disabled {
 		pointer-events: none;

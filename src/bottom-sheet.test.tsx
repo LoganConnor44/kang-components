@@ -210,3 +210,60 @@ describe('BottomSheet', () => {
 		expect(second).toHaveBeenCalledTimes(1);
 	});
 });
+
+describe('BottomSheet dialog semantics (#720)', () => {
+	it('is a labelled modal dialog', () => {
+		render(
+			<BottomSheet isOpen onClose={() => {}} title="Settings">
+				<button>ok</button>
+			</BottomSheet>
+		);
+		const dialog = screen.getByRole('dialog');
+		expect(dialog).toHaveAttribute('aria-modal', 'true');
+		// Name comes from the visually-hidden title via aria-labelledby.
+		expect(dialog).toHaveAccessibleName('Settings');
+	});
+
+	it('closes on Escape', () => {
+		const onClose = vi.fn();
+		render(
+			<BottomSheet isOpen onClose={onClose} title="X">
+				<button>ok</button>
+			</BottomSheet>
+		);
+		fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+		expect(onClose).toHaveBeenCalledTimes(1);
+	});
+
+	it('moves focus into the sheet on open', async () => {
+		render(
+			<BottomSheet isOpen onClose={() => {}} title="X">
+				<button>ok</button>
+			</BottomSheet>
+		);
+		const dialog = screen.getByRole('dialog');
+		await act(async () => {
+			await flush();
+		});
+		expect(dialog).toHaveFocus();
+	});
+
+	it('traps Tab focus (wraps last→first and first→last)', () => {
+		render(
+			<BottomSheet isOpen onClose={() => {}} title="X">
+				<button>A</button>
+				<button>B</button>
+			</BottomSheet>
+		);
+		const dialog = screen.getByRole('dialog');
+		const [a, b] = screen.getAllByRole('button');
+
+		b.focus();
+		fireEvent.keyDown(dialog, { key: 'Tab' });
+		expect(a).toHaveFocus();
+
+		a.focus();
+		fireEvent.keyDown(dialog, { key: 'Tab', shiftKey: true });
+		expect(b).toHaveFocus();
+	});
+});

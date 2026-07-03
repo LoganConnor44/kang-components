@@ -36,10 +36,12 @@
 import {
 	type ReactElement,
 	type ReactNode,
+	type KeyboardEvent as ReactKeyboardEvent,
 	useRef,
 	useEffect,
 	useCallback,
 	useState,
+	useId,
 } from 'react';
 import { useSpring, animated } from '@react-spring/web';
 import { useDrag } from '@use-gesture/react';
@@ -131,6 +133,15 @@ function dampenValue(v: number): number {
 	return 8 * (Math.log(v + 1) - 2);
 }
 
+const FOCUSABLE_SELECTOR =
+	'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/** Focusable descendants of `root`, in DOM order (for the focus trap). */
+function getFocusable(root: HTMLElement | null): HTMLElement[] {
+	if (!root) return [];
+	return Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+}
+
 /**
  * Draggable bottom sheet modal with gesture support.
  * Features rubber-band physics, velocity-based swipe detection, and smooth animations.
@@ -204,6 +215,57 @@ export function BottomSheet({
 		onCloseRef.current();
 	}, []);
 
+	// Accessible name for the dialog, linked to the visually-hidden title.
+	const titleId = useId();
+
+	// Focus management (#720), deliberately separate from the open/close spring
+	// effect so it can't perturb the onExitComplete stability contract above.
+	// On open: remember what had focus, then move focus into the sheet. On close:
+	// return focus to the invoking element.
+	const previouslyFocused = useRef<HTMLElement | null>(null);
+	useEffect(() => {
+		if (isOpen) {
+			previouslyFocused.current = document.activeElement as HTMLElement | null;
+			// Panel mounts this render; focus it after paint. tabIndex=-1 makes it
+			// programmatically focusable without being a Tab stop itself.
+			const raf = requestAnimationFrame(() => modalRef.current?.focus());
+			return () => cancelAnimationFrame(raf);
+		}
+		// Closing: restore focus to the trigger if it's still around.
+		previouslyFocused.current?.focus?.();
+	}, [isOpen]);
+
+	// Escape-to-close + a Tab focus trap so keyboard/AT users can't tab out of the
+	// modal sheet or get stuck behind it.
+	const handleKeyDown = useCallback(
+		(e: ReactKeyboardEvent<HTMLDivElement>) => {
+			if (e.key === 'Escape') {
+				e.stopPropagation();
+				handleClose();
+				return;
+			}
+			if (e.key !== 'Tab') return;
+			const focusable = getFocusable(modalRef.current);
+			if (focusable.length === 0) {
+				// Nothing focusable inside — keep focus on the panel.
+				e.preventDefault();
+				modalRef.current?.focus();
+				return;
+			}
+			const first = focusable[0];
+			const last = focusable[focusable.length - 1];
+			const activeEl = document.activeElement;
+			if (e.shiftKey && (activeEl === first || activeEl === modalRef.current)) {
+				e.preventDefault();
+				last.focus();
+			} else if (!e.shiftKey && activeEl === last) {
+				e.preventDefault();
+				first.focus();
+			}
+		},
+		[handleClose]
+	);
+
 	// Drag handler
 	const bind = useDrag(
 		({ active, movement: [, my], velocity: [, vy], direction: [, dy], cancel }) => {
@@ -273,8 +335,15 @@ export function BottomSheet({
 					transform: spring.y.to((y: number) => `translateY(${y}px)`),
 				}}
 			>
-				<SheetContent ref={modalRef}>
-					<VisuallyHidden>{title}</VisuallyHidden>
+				<SheetContent
+					ref={modalRef}
+					role="dialog"
+					aria-modal="true"
+					aria-labelledby={titleId}
+					tabIndex={-1}
+					onKeyDown={handleKeyDown}
+				>
+					<VisuallyHidden id={titleId}>{title}</VisuallyHidden>
 					<div
 						{...bind()}
 						style={{

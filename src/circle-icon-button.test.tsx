@@ -101,3 +101,10 @@ describe('CircleIconButton', () => {
 		expect(btn.getAttribute('style')).toMatch(/opacity/);
 	});
 });
+
+describe('CircleIconButton accessibility (#719)', () => {
+	it('exposes an accessible name via ariaLabel (icon is decorative)', () => {
+		render(<CircleIconButton iconComponent="person" ariaLabel="Profile" />);
+		expect(screen.getByRole('button', { name: 'Profile' })).toBeInTheDocument();
+	});
+});
