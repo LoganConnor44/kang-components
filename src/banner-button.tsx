@@ -81,6 +81,9 @@ const StyledButton = styled.button`
 	min-height: 44px;
 	box-sizing: border-box;
 	padding: 0.5rem 1rem;
+	/* Label sized up to balance the 44px height — a small inherited label looked
+	   chunky in the taller button. */
+	font-size: 1.125rem;
 	border: none;
 	outline: none;
 	cursor: pointer;
@@ -179,7 +182,7 @@ export default function BannerButton({
 			<StyledButton type="button" className={buttonType}>
 				{iconElement !== null && <IconContainer>{iconElement}</IconContainer>}
 				<AnimatedText
-					textStyles={{ lineHeight: '0.8rem', minWidth: '3rem' }}
+					textStyles={{ lineHeight: '1.4rem', minWidth: '3rem' }}
 					variants={[buttonText.english, chineseText]}
 					sizers={[buttonText.english, buttonText.simplified, buttonText.traditional]}
 					staticIndex={0}
