@@ -95,6 +95,23 @@ const Row = styled.button`
 Per-row content (leading icon, label, destructive tint, ripple) is the
 consumer's to layer on top of the row.
 
+## `BottomSheet`
+
+A draggable bottom sheet: an overlay plus a panel that slides up, closed by the
+overlay, Escape, or a swipe down on the handle. It is a labelled modal dialog by
+default (`aria-modal`, Tab trapped inside). Pass `modal={false}` when the page
+behind must stay usable: no overlay element is rendered, so the page stays
+visible, scrollable and tappable and a tap behind does not close the sheet;
+`aria-modal` and the Tab trap are dropped. It is still a `role="dialog"` named by
+`title`, takes focus on open and returns it on close, and Escape (with focus in
+the panel) and the handle's drag still close it.
+
+```tsx
+<BottomSheet isOpen={open} onClose={close} title="Check-in" modal={false}>
+	…
+</BottomSheet>
+```
+
 ## Build
 
 ```bash
