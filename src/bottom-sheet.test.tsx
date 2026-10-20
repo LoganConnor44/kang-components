@@ -267,3 +267,112 @@ describe('BottomSheet dialog semantics (#720)', () => {
 		expect(b).toHaveFocus();
 	});
 });
+
+/**
+ * Non-modal mode (#41). `modal={false}` renders no overlay element at all (so
+ * nothing can intercept a tap or scroll behind the sheet), omits `aria-modal`,
+ * and drops the Tab trap — but it is still a labelled dialog, Escape inside the
+ * panel still closes it, and the handle's drag-to-close still works.
+ */
+describe('BottomSheet non-modal (#41)', () => {
+	// The handle is the only element carrying `cursor: grab`. `pointer.touch`
+	// makes use-gesture listen for touch events rather than pointer events.
+	const dragHandle = (dy: number) => {
+		const handle = Array.from(document.querySelectorAll<HTMLElement>('div')).find(
+			(d) => d.style.cursor === 'grab'
+		) as HTMLElement;
+		const touch = (y: number) => [{ identifier: 1, clientX: 100, clientY: y, target: handle }];
+		fireEvent.touchStart(handle, { touches: touch(100), changedTouches: touch(100), targetTouches: touch(100) });
+		for (let step = 1; step <= 4; step++) {
+			const y = 100 + (dy * step) / 4;
+			fireEvent.touchMove(handle, { touches: touch(y), changedTouches: touch(y), targetTouches: touch(y) });
+		}
+		const end = 100 + dy;
+		fireEvent.touchEnd(handle, { touches: [], changedTouches: touch(end), targetTouches: [] });
+	};
+
+	it('keeps aria-modal and the overlay by default', () => {
+		render(
+			<BottomSheet isOpen onClose={() => {}} title="Default">
+				<button>ok</button>
+			</BottomSheet>
+		);
+		expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true');
+		expect(getOverlay()).toBeDefined();
+	});
+
+	it('renders no overlay and no aria-modal, and is still a dialog named by its title', () => {
+		render(
+			<BottomSheet isOpen onClose={() => {}} title="Check-in" modal={false}>
+				<button>ok</button>
+			</BottomSheet>
+		);
+		expect(getOverlay()).toBeUndefined();
+		const dialog = screen.getByRole('dialog');
+		expect(dialog).not.toHaveAttribute('aria-modal');
+		expect(dialog).toHaveAccessibleName('Check-in');
+	});
+
+	it('does not trap Tab: focus on the last button is not wrapped to the first', () => {
+		render(
+			<BottomSheet isOpen onClose={() => {}} title="X" modal={false}>
+				<button>A</button>
+				<button>B</button>
+			</BottomSheet>
+		);
+		const dialog = screen.getByRole('dialog');
+		const [, b] = screen.getAllByRole('button');
+		b.focus();
+		// fireEvent returns false when the handler called preventDefault.
+		const notPrevented = fireEvent.keyDown(dialog, { key: 'Tab' });
+		expect(notPrevented).toBe(true);
+		expect(b).toHaveFocus();
+	});
+
+	it('closes on Escape with focus inside the panel', () => {
+		const onClose = vi.fn();
+		render(
+			<BottomSheet isOpen onClose={onClose} title="X" modal={false}>
+				<button>ok</button>
+			</BottomSheet>
+		);
+		screen.getByRole('button', { name: 'ok' }).focus();
+		fireEvent.keyDown(screen.getByRole('button', { name: 'ok' }), { key: 'Escape' });
+		expect(onClose).toHaveBeenCalledTimes(1);
+	});
+
+	// jsdom does no hit-testing, so this cannot show a click being swallowed by an
+	// overlay (the no-overlay test above is what pins that); it pins that nothing
+	// outside the panel — e.g. a document-level click-outside listener — closes it.
+	it('does not close when something behind the sheet is clicked', () => {
+		const onClose = vi.fn();
+		render(
+			<>
+				<button>behind</button>
+				<BottomSheet isOpen onClose={onClose} title="X" modal={false}>
+					<button>ok</button>
+				</BottomSheet>
+			</>
+		);
+		fireEvent.click(screen.getByRole('button', { name: 'behind' }));
+		expect(onClose).not.toHaveBeenCalled();
+	});
+
+	it('closes when the handle is dragged past the threshold', () => {
+		const onClose = vi.fn();
+		// Synthetic touch events land microseconds apart, so every drag reads as a
+		// fast flick; lift the velocity threshold out of reach so only the
+		// distance path decides and the short drag is a real control.
+		render(
+			<BottomSheet isOpen onClose={onClose} title="X" modal={false} velocityThreshold={1e9}>
+				<button>ok</button>
+			</BottomSheet>
+		);
+		// A short drag (under maxHeight 300 × closeThreshold 0.25 = 75px) springs back…
+		dragHandle(20);
+		expect(onClose).not.toHaveBeenCalled();
+		// …and one past it closes.
+		dragHandle(200);
+		expect(onClose).toHaveBeenCalledTimes(1);
+	});
+});

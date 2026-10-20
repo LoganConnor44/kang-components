@@ -6,8 +6,9 @@
  * (`src/views/bottom-sheet/BottomSheet.tsx`, imported as `LibraryBottomSheet`) is a
  * pure import swap.
  *
- * Behavior: an overlay + a panel that slides up from the bottom. The handle area
- * is draggable (rubber-band physics dragging up, velocity- or distance-based
+ * Behavior: an overlay + a panel that slides up from the bottom (`modal={false}`
+ * drops the overlay, `aria-modal` and the Tab trap — see `BottomSheetProps.modal`).
+ * The handle area is draggable (rubber-band physics dragging up, velocity- or distance-based
  * swipe-to-close dragging down). Clicking the overlay or swiping past the close
  * threshold calls `onClose`. The component owns a `shouldRender` flag so it can
  * play the slide-out animation before unmounting, and fires `onExitComplete` once
@@ -67,6 +68,15 @@ export interface BottomSheetProps {
 	closeThreshold?: number;
 	/** Fires after the close animation finishes (use for cleanup like clearing content) */
 	onExitComplete?: () => void;
+	/**
+	 * Whether the sheet is modal (default: true). `modal={false}` renders no
+	 * overlay element at all — so the page behind stays visible, scrollable and
+	 * tappable, and a tap behind does not close the sheet — omits `aria-modal`,
+	 * and drops the Tab focus trap. It keeps `role="dialog"` + `aria-labelledby`,
+	 * moving focus into the panel on open and back on close, Escape-to-close
+	 * (with focus inside the panel), and the handle's drag-to-close.
+	 */
+	modal?: boolean;
 }
 
 type SheetTheme = {
@@ -155,6 +165,7 @@ export function BottomSheet({
 	velocityThreshold = 0.4,
 	closeThreshold = 0.25,
 	onExitComplete,
+	modal = true,
 }: BottomSheetProps): ReactElement {
 	const modalRef = useRef<HTMLDivElement>(null);
 	const [shouldRender, setShouldRender] = useState(isOpen);
@@ -236,7 +247,8 @@ export function BottomSheet({
 	}, [isOpen]);
 
 	// Escape-to-close + a Tab focus trap so keyboard/AT users can't tab out of the
-	// modal sheet or get stuck behind it.
+	// modal sheet or get stuck behind it. A non-modal sheet keeps Escape but not
+	// the trap: the page behind it is meant to be reachable.
 	const handleKeyDown = useCallback(
 		(e: ReactKeyboardEvent<HTMLDivElement>) => {
 			if (e.key === 'Escape') {
@@ -244,6 +256,7 @@ export function BottomSheet({
 				handleClose();
 				return;
 			}
+			if (!modal) return;
 			if (e.key !== 'Tab') return;
 			const focusable = getFocusable(modalRef.current);
 			if (focusable.length === 0) {
@@ -263,7 +276,7 @@ export function BottomSheet({
 				first.focus();
 			}
 		},
-		[handleClose]
+		[handleClose, modal]
 	);
 
 	// Drag handler
@@ -313,18 +326,23 @@ export function BottomSheet({
 
 	return (
 		<>
-			<animated.div
-				style={{
-					position: 'fixed',
-					inset: 0,
-					zIndex: 49,
-					opacity: spring.opacity,
-					pointerEvents: isOpen ? 'auto' : 'none',
-				}}
-				onClick={handleClose}
-			>
-				<SheetOverlay />
-			</animated.div>
+			{/* Non-modal renders no overlay at all (not a transparent or
+			    pointer-events:none one): an absent element can't intercept a tap
+			    or a scroll on the page behind. */}
+			{modal && (
+				<animated.div
+					style={{
+						position: 'fixed',
+						inset: 0,
+						zIndex: 49,
+						opacity: spring.opacity,
+						pointerEvents: isOpen ? 'auto' : 'none',
+					}}
+					onClick={handleClose}
+				>
+					<SheetOverlay />
+				</animated.div>
+			)}
 			<animated.div
 				style={{
 					position: 'fixed',
@@ -338,7 +356,7 @@ export function BottomSheet({
 				<SheetContent
 					ref={modalRef}
 					role="dialog"
-					aria-modal="true"
+					aria-modal={modal ? 'true' : undefined}
 					aria-labelledby={titleId}
 					tabIndex={-1}
 					onKeyDown={handleKeyDown}
