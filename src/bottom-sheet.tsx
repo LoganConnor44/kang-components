@@ -7,7 +7,8 @@
  * pure import swap.
  *
  * Behavior: an overlay + a panel that slides up from the bottom (`modal={false}`
- * drops the overlay, `aria-modal` and the Tab trap — see `BottomSheetProps.modal`).
+ * drops the overlay, `aria-modal` and the Tab trap — see `BottomSheetProps.modal`;
+ * `resizable` turns the handle into a resize grip — see `BottomSheetProps.resizable`).
  * The handle area is draggable (rubber-band physics dragging up, velocity- or distance-based
  * swipe-to-close dragging down). Clicking the overlay or swiping past the close
  * threshold calls `onClose`. The component owns a `shouldRender` flag so it can
@@ -60,7 +61,10 @@ export interface BottomSheetProps {
 	children: ReactNode;
 	/** Accessible title for screen readers */
 	title?: string;
-	/** Max height of the sheet (default: 300) */
+	/**
+	 * Max height of the sheet (default: 300). With `resizable` it is also the
+	 * upper bound of a drag, and replaces the panel's `85dvh` cap.
+	 */
 	maxHeight?: number;
 	/** Velocity threshold for swipe-to-close in px/ms (default: 0.4) */
 	velocityThreshold?: number;
@@ -77,6 +81,23 @@ export interface BottomSheetProps {
 	 * (with focus inside the panel), and the handle's drag-to-close.
 	 */
 	modal?: boolean;
+	/**
+	 * Whether dragging the handle resizes the sheet (default: false). Dragging up
+	 * grows the panel and dragging down shrinks it, clamped to
+	 * `[minHeight, maxHeight]`. Dragging down past `minHeight` takes the close
+	 * path: it closes once the overshoot passes `minHeight × closeThreshold`, or
+	 * on a downward flick faster than `velocityThreshold`, and springs back to
+	 * `minHeight` otherwise. The panel's height is `height` (or, uncontrolled,
+	 * its content height until the first drag); its body scrolls when the content
+	 * is taller. Omitting it renders exactly what 0.9.12 did.
+	 */
+	resizable?: boolean;
+	/** Controlled panel height in px (`resizable` only). Pair with `onHeightChange`. */
+	height?: number;
+	/** Lower bound of a resize drag in px (`resizable` only; default: 120) */
+	minHeight?: number;
+	/** Fires with the new clamped height in px while the handle is dragged (`resizable` only) */
+	onHeightChange?: (px: number) => void;
 }
 
 type SheetTheme = {
@@ -166,6 +187,10 @@ export function BottomSheet({
 	closeThreshold = 0.25,
 	onExitComplete,
 	modal = true,
+	resizable = false,
+	height,
+	minHeight = 120,
+	onHeightChange,
 }: BottomSheetProps): ReactElement {
 	const modalRef = useRef<HTMLDivElement>(null);
 	const [shouldRender, setShouldRender] = useState(isOpen);
@@ -184,6 +209,15 @@ export function BottomSheet({
 	onExitCompleteRef.current = onExitComplete;
 	const onCloseRef = useRef(onClose);
 	onCloseRef.current = onClose;
+	const onHeightChangeRef = useRef(onHeightChange);
+	onHeightChangeRef.current = onHeightChange;
+
+	// Resizable: the height the panel renders at when the consumer doesn't
+	// control it (undefined = its content height, i.e. today's layout), and the
+	// height a drag started from. Neither feeds the open/close effect.
+	const [ownHeight, setOwnHeight] = useState<number | undefined>(undefined);
+	const panelHeight = height ?? ownHeight;
+	const dragStartHeight = useRef(0);
 
 	const [spring, api] = useSpring(() => ({
 		y: maxHeight,
@@ -215,6 +249,8 @@ export function BottomSheet({
 					// with finished:false and must NOT unmount the sheet.
 					if (result?.finished) {
 						setShouldRender(false);
+						// An uncontrolled resizable sheet reopens at its content height.
+						setOwnHeight(undefined);
 						onExitCompleteRef.current?.();
 					}
 				},
@@ -279,9 +315,48 @@ export function BottomSheet({
 		[handleClose, modal]
 	);
 
+	// Resize drag (resizable only): movement is measured from where the drag
+	// started (`from` is [0, 0] in this mode), so the requested height is the
+	// start height minus the movement. Within bounds the panel resizes and stays
+	// put; below minHeight it holds minHeight and slides down by the overshoot,
+	// which is what the close decision reads.
+	const handleResize = (first: boolean, active: boolean, my: number, vy: number, dy: number) => {
+		if (first) {
+			dragStartHeight.current = panelHeight ?? (modalRef.current?.offsetHeight || minHeight);
+		}
+		const requested = dragStartHeight.current - my;
+		const next = Math.min(maxHeight, Math.max(minHeight, requested));
+		const overshoot = Math.max(0, minHeight - requested);
+
+		if (active) {
+			if (next !== panelHeight) {
+				if (height === undefined) setOwnHeight(next);
+				onHeightChangeRef.current?.(next);
+			}
+			api.start({ y: overshoot, immediate: true });
+			const progress = Math.min(overshoot / minHeight, 1);
+			api.start({ opacity: 1 - progress * 0.5, immediate: true });
+			return;
+		}
+		// Only a drag that went below minHeight can close: a fast resize within
+		// bounds must not read as a swipe-to-close.
+		const shouldClose =
+			overshoot > 0 &&
+			((vy > velocityThreshold && dy > 0) || overshoot > minHeight * closeThreshold);
+		if (shouldClose) {
+			handleClose();
+		} else {
+			api.start({ y: 0, opacity: 1 });
+		}
+	};
+
 	// Drag handler
 	const bind = useDrag(
-		({ active, movement: [, my], velocity: [, vy], direction: [, dy], cancel }) => {
+		({ first, active, movement: [, my], velocity: [, vy], direction: [, dy], cancel }) => {
+			if (resizable) {
+				handleResize(first, active, my, vy, dy);
+				return;
+			}
 			// Prevent dragging up beyond the top
 			if (my < -10) {
 				cancel();
@@ -311,7 +386,7 @@ export function BottomSheet({
 			}
 		},
 		{
-			from: () => [0, spring.y.get()],
+			from: () => (resizable ? [0, 0] : [0, spring.y.get()]),
 			filterTaps: true,
 			axis: 'y',
 			pointer: { touch: true },
@@ -323,6 +398,19 @@ export function BottomSheet({
 	if (!shouldRender) {
 		return <></>;
 	}
+
+	// Resizable: a fixed-height flex column whose body scrolls, capped at
+	// maxHeight instead of 85dvh. Not resizable: no inline styles at all, so the
+	// panel renders exactly as before.
+	const panelStyle = resizable
+		? {
+				display: 'flex',
+				flexDirection: 'column' as const,
+				maxHeight: `${maxHeight}px`,
+				height: panelHeight === undefined ? undefined : `${panelHeight}px`,
+			}
+		: undefined;
+	const bodyStyle = resizable ? { flex: '1 1 auto', minHeight: 0, overflowY: 'auto' as const } : undefined;
 
 	return (
 		<>
@@ -360,6 +448,7 @@ export function BottomSheet({
 					aria-labelledby={titleId}
 					tabIndex={-1}
 					onKeyDown={handleKeyDown}
+					style={panelStyle}
 				>
 					<VisuallyHidden id={titleId}>{title}</VisuallyHidden>
 					<div
@@ -372,7 +461,7 @@ export function BottomSheet({
 					>
 						<SheetHandle />
 					</div>
-					<SheetBody>{children}</SheetBody>
+					<SheetBody style={bodyStyle}>{children}</SheetBody>
 				</SheetContent>
 			</animated.div>
 		</>

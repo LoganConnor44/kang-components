@@ -112,6 +112,23 @@ the panel) and the handle's drag still close it.
 </BottomSheet>
 ```
 
+Pass `resizable` to make the handle a resize grip: dragging up grows the panel and
+dragging down shrinks it, clamped to `[minHeight, maxHeight]` (`minHeight`
+defaults to 120; `maxHeight` also replaces the panel's `85dvh` cap). Only a drag
+down past `minHeight` can close the sheet, by the same `closeThreshold` (of
+`minHeight`) and `velocityThreshold` rules; a shorter one springs back. The body
+scrolls when the content is taller than the panel. Control the height with
+`height` + `onHeightChange`, or omit `height` to let the sheet keep its own
+(it starts at the content height and resets on close).
+
+```tsx
+const [h, setH] = useState(() => vh * 0.75);
+<BottomSheet isOpen={open} onClose={close} resizable height={h} minHeight={vh * 0.3}
+	maxHeight={vh * 0.92} onHeightChange={setH}>
+	…
+</BottomSheet>
+```
+
 ## Build
 
 ```bash
