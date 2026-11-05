@@ -406,6 +406,8 @@ export function BottomSheet({
 		? {
 				display: 'flex',
 				flexDirection: 'column' as const,
+				// border-box: height and maxHeight include the safe-area bottom padding.
+				boxSizing: 'border-box' as const,
 				maxHeight: `${maxHeight}px`,
 				height: panelHeight === undefined ? undefined : `${panelHeight}px`,
 			}
